@@ -33,13 +33,13 @@ def get_random_weetje(dier):
 try:
     import cv2
 except:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "opencv-python"])
+    
     import cv2
 
 try:
     from PIL import Image
 except:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "pillow"])
+    
     from PIL import Image
 
 import numpy as np
@@ -78,67 +78,22 @@ if start_btn:
 if stop_btn:
     st.session_state.camera_active = False
 
-# CAMERA LOOP
-if st.session_state.camera_active:
-    cap = cv2.VideoCapture(0)
-   
-    if not cap.isOpened():
-        st.error("❌ Camera niet beschikbaar!")
-        st.session_state.camera_active = False
+img = st.camera_input("📸 Maak een foto")
+
+if img is not None:
+    image = Image.open(img)
+    st.image(image, caption="Opgenomen beeld")
+
+    keuze = random.choice(["AAP", "OLIFANT"])
+    zekerheid = random.randint(75, 95)
+    weetje = get_random_weetje(keuze)
+
+    if keuze == "AAP":
+        st.markdown(f"# 🦍 AAP\n**Zekerheid:** {zekerheid}%")
+        st.success(f"💡 {weetje}")
     else:
-        last_check = time.time()
-        frame_count = 0
-       
-        while st.session_state.camera_active:
-            ret, frame = cap.read()
-           
-            if not ret:
-                st.error("❌ Kan geen beeld krijgen")
-                break
-           
-            # Toon live feed
-            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            video_frame.image(frame_rgb, channels="RGB", use_container_width=True)
-           
-            # Check elke 2 seconden
-            current_time = time.time()
-            if current_time - last_check >= 2.0:
-                last_check = current_time
-
-                keuze = random.choice(["AAP", "OLIFANT"])
-                zekerheid = random.randint(75, 95)
-
-                # Toon resultaat
-                weetje = get_random_weetje(keuze)
-
-                if keuze == "AAP":
-                    result_box.markdown(f"""
-                    # 🦍 **AAP**
-                    **Zekerheid:** {zekerheid}%
-                    """)
-                    info_box.success(f"💡 {weetje}")
-                    st.balloons()
-
-                else:
-                    result_box.markdown(f"""
-                    # 🐘 **OLIFANT**
-                    **Zekerheid:** {zekerheid}%
-                    """)
-                    info_box.info(f"💡 {weetje}")
-                    st.balloons()
-
-            # Refresh delay
-            time.sleep(0.03)
-           
-            # Check stop button
-            if stop_btn:
-                st.session_state.camera_active = False
-                break
-       
-        cap.release()
-        st.success("✅ Camera gestopt")
-else:
-    st.info("ℹ️ Klik op 'Start Camera' om te beginnen")
+        st.markdown(f"# 🐘 OLIFANT\n**Zekerheid:** {zekerheid}%")
+        st.info(f"💡 {weetje}")
 
 # Teachable Machine integratie instructies
 st.markdown("---")
