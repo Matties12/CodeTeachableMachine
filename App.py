@@ -1,6 +1,9 @@
 import streamlit as st
 import time
 import random
+from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, WebRtcMode
+import av
+import threading
 
 # Feitjes data
 WEETJES = {
@@ -38,49 +41,91 @@ def get_random_weetje(dier):
     return "Geen weetje gevonden 😢"
 
 
+# Video processor die elke 2 seconden analyseert
+class VideoProcessor(VideoProcessorBase):
+    def __init__(self):
+        self.last_analysis = time.time()
+        self.current_result = None
+        self.lock = threading.Lock()
+
+    def recv(self, frame):
+        img = frame.to_ndarray(format="bgr24")
+        
+        # Check elke 2 seconden
+        current_time = time.time()
+        if current_time - self.last_analysis >= 2.0:
+            with self.lock:
+                self.last_analysis = current_time
+                keuze = random.choice(["AAP", "OLIFANT"])
+                zekerheid = random.randint(75, 95)
+                weetje = get_random_weetje(keuze)
+                self.current_result = {
+                    "dier": keuze,
+                    "zekerheid": zekerheid,
+                    "weetje": weetje
+                }
+        
+        return av.VideoFrame.from_ndarray(img, format="bgr24")
+    
+    def get_result(self):
+        with self.lock:
+            return self.current_result
+
+
 st.set_page_config(page_title="Live AAP vs OLIFANT", layout="wide")
 
 st.title("🦍 LIVE AAP vs OLIFANT Herkenning")
-st.write("Maak een foto met je camera!")
+st.write("Live webcam → Automatische analyse elke 2 seconden!")
 
 # Layout met kolommen
 col1, col2 = st.columns([2, 1])
 
 with col1:
-    st.subheader("📸 Camera")
-    # Streamlit's ingebouwde camera widget
-    camera_photo = st.camera_input("Maak een foto")
+    st.subheader("📹 Live Webcam")
+    ctx = webrtc_streamer(
+        key="example",
+        mode=WebRtcMode.SENDRECV,
+        video_processor_factory=VideoProcessor,
+        media_stream_constraints={"video": True, "audio": False},
+        async_processing=True,
+    )
 
 with col2:
     st.subheader("🎯 Resultaat")
-    
-    if camera_photo is not None:
-        # Simuleer analyse
-        with st.spinner("Analyzing..."):
-            time.sleep(1)
-        
-        keuze = random.choice(["AAP", "OLIFANT"])
-        zekerheid = random.randint(75, 95)
-        weetje = get_random_weetje(keuze)
+    result_placeholder = st.empty()
+    info_placeholder = st.empty()
 
-        if keuze == "AAP":
-            st.markdown(f"""
-            # 🦍 **AAP**
-            **Zekerheid:** {zekerheid}%
-            """)
-            st.success(f"💡 {weetje}")
-            st.balloons()
+# Update resultaten elke seconde
+if ctx.video_processor:
+    while ctx.state.playing:
+        result = ctx.video_processor.get_result()
+        
+        if result:
+            if result["dier"] == "AAP":
+                result_placeholder.markdown(f"""
+                # 🦍 **AAP**
+                **Zekerheid:** {result['zekerheid']}%
+                """)
+                info_placeholder.success(f"💡 {result['weetje']}")
+            else:
+                result_placeholder.markdown(f"""
+                # 🐘 **OLIFANT**
+                **Zekerheid:** {result['zekerheid']}%
+                """)
+                info_placeholder.info(f"💡 {result['weetje']}")
         else:
-            st.markdown(f"""
-            # 🐘 **OLIFANT**
-            **Zekerheid:** {zekerheid}%
-            """)
-            st.info(f"💡 {weetje}")
-            st.balloons()
-    else:
-        st.info("📷 Maak een foto om te beginnen")
+            result_placeholder.info("🔄 Wachten op eerste analyse...")
+        
+        time.sleep(0.5)
 
 # Teachable Machine integratie instructies
 st.markdown("---")
 st.markdown("### 📋 Teachable Machine Toevoegen")
 st.write("Later kunnen we hier echte AI-herkenning toevoegen!")
+```
+
+**requirements.txt:**
+```
+streamlit
+streamlit-webrtc
+av
