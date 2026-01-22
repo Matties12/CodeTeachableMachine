@@ -116,10 +116,3 @@ if ctx.video_processor:
 st.markdown("---")
 st.markdown("### 📋 Teachable Machine Toevoegen")
 st.write("Later kunnen we hier echte AI-herkenning toevoegen!")
-```
-
-En maak ook een **requirements.txt** bestand aan met:
-```
-streamlit
-streamlit-webrtc
-av
