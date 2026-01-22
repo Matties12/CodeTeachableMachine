@@ -1,7 +1,6 @@
 import streamlit as st
 import time
 import random
-from PIL import Image
 
 # Feitjes data
 WEETJES = {
@@ -39,26 +38,23 @@ def get_random_weetje(dier):
     return "Geen weetje gevonden 😢"
 
 
-st.set_page_config(page_title="AAP vs OLIFANT", layout="wide")
+st.set_page_config(page_title="Live AAP vs OLIFANT", layout="wide")
 
-st.title("🦍 AAP vs OLIFANT Herkenning")
-st.write("Upload een foto en ontdek wat het is!")
+st.title("🦍 LIVE AAP vs OLIFANT Herkenning")
+st.write("Maak een foto met je camera!")
 
 # Layout met kolommen
 col1, col2 = st.columns([2, 1])
 
 with col1:
-    st.subheader("📸 Upload een foto")
-    uploaded_file = st.file_uploader("Kies een afbeelding...", type=["jpg", "jpeg", "png"])
-    
-    if uploaded_file is not None:
-        image = Image.open(uploaded_file)
-        st.image(image, caption="Geüploade foto", use_container_width=True)
+    st.subheader("📸 Camera")
+    # Streamlit's ingebouwde camera widget
+    camera_photo = st.camera_input("Maak een foto")
 
 with col2:
     st.subheader("🎯 Resultaat")
     
-    if uploaded_file is not None:
+    if camera_photo is not None:
         # Simuleer analyse
         with st.spinner("Analyzing..."):
             time.sleep(1)
@@ -82,7 +78,7 @@ with col2:
             st.info(f"💡 {weetje}")
             st.balloons()
     else:
-        st.info("⬅️ Upload een foto om te beginnen")
+        st.info("📷 Maak een foto om te beginnen")
 
 # Teachable Machine integratie instructies
 st.markdown("---")
