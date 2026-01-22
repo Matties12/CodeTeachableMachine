@@ -1,9 +1,7 @@
 import streamlit as st
 import time
 import random
-from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, WebRtcMode, RTCConfiguration
-import av
-import threading
+from PIL import Image
 
 # Feitjes data
 WEETJES = {
@@ -40,90 +38,56 @@ def get_random_weetje(dier):
     return "Geen weetje gevonden 😢"
 
 
-class VideoProcessor(VideoProcessorBase):
-    def __init__(self):
-        self.last_analysis = time.time()
-        self.current_result = None
-        self.lock = threading.Lock()
+st.set_page_config(page_title="AAP vs OLIFANT", layout="wide")
 
-    def recv(self, frame):
-        img = frame.to_ndarray(format="bgr24")
-        
-        current_time = time.time()
-        if current_time - self.last_analysis >= 2.0:
-            with self.lock:
-                self.last_analysis = current_time
-                keuze = random.choice(["AAP", "OLIFANT"])
-                zekerheid = random.randint(75, 95)
-                weetje = get_random_weetje(keuze)
-                self.current_result = {
-                    "dier": keuze,
-                    "zekerheid": zekerheid,
-                    "weetje": weetje
-                }
-        
-        return av.VideoFrame.from_ndarray(img, format="bgr24")
-    
-    def get_result(self):
-        with self.lock:
-            return self.current_result
+st.title("🦍 AAP vs OLIFANT Herkenning")
+st.write("Maak een foto met je camera en ontdek wat het is!")
 
-
-# RTC Configuration met STUN servers
-RTC_CONFIGURATION = RTCConfiguration(
-    {"iceServers": [
-        {"urls": ["stun:stun.l.google.com:19302"]},
-        {"urls": ["stun:stun1.l.google.com:19302"]},
-        {"urls": ["stun:stun2.l.google.com:19302"]},
-    ]}
-)
-
-st.set_page_config(page_title="Live AAP vs OLIFANT", layout="wide")
-
-st.title("🦍 LIVE AAP vs OLIFANT Herkenning")
-st.write("Live webcam → Automatische analyse elke 2 seconden!")
-
+# Layout met kolommen
 col1, col2 = st.columns([2, 1])
 
 with col1:
-    st.subheader("📹 Live Webcam")
-    ctx = webrtc_streamer(
-        key="animal-detector",
-        mode=WebRtcMode.SENDRECV,
-        rtc_configuration=RTC_CONFIGURATION,
-        video_processor_factory=VideoProcessor,
-        media_stream_constraints={"video": True, "audio": False},
-        async_processing=True,
-    )
+    st.subheader("📸 Camera")
+    camera_photo = st.camera_input("Maak een foto")
 
 with col2:
     st.subheader("🎯 Resultaat")
-    result_placeholder = st.empty()
-    info_placeholder = st.empty()
+    
+    if camera_photo is not None:
+        # Simuleer analyse
+        with st.spinner("Bezig met analyseren..."):
+            time.sleep(1)
+        
+        keuze = random.choice(["AAP", "OLIFANT"])
+        zekerheid = random.randint(75, 95)
+        weetje = get_random_weetje(keuze)
 
-if ctx.video_processor:
-    while ctx.state.playing:
-        result = ctx.video_processor.get_result()
-        
-        if result:
-            if result["dier"] == "AAP":
-                result_placeholder.markdown(f"""
-                # 🦍 **AAP**
-                **Zekerheid:** {result['zekerheid']}%
-                """)
-                info_placeholder.success(f"💡 {result['weetje']}")
-            else:
-                result_placeholder.markdown(f"""
-                # 🐘 **OLIFANT**
-                **Zekerheid:** {result['zekerheid']}%
-                """)
-                info_placeholder.info(f"💡 {result['weetje']}")
+        if keuze == "AAP":
+            st.markdown(f"""
+            # 🦍 **AAP**
+            **Zekerheid:** {zekerheid}%
+            """)
+            st.success(f"💡 {weetje}")
+            st.balloons()
         else:
-            result_placeholder.info("🔄 Wachten op eerste analyse...")
-        
-        time.sleep(0.5)
+            st.markdown(f"""
+            # 🐘 **OLIFANT**
+            **Zekerheid:** {zekerheid}%
+            """)
+            st.info(f"💡 {weetje}")
+            st.balloons()
+    else:
+        st.info("📷 Klik op 'Take Photo' om te beginnen")
 
 st.markdown("---")
-st.markdown("### 📋 Tips")
-st.write("- Geef je browser toestemming om de camera te gebruiken")
-st.write("- Als de verbinding niet lukt, probeer de pagina te verversen")
+st.markdown("### 📋 Hoe werkt het?")
+st.write("1. Klik op 'Take Photo' om je camera te activeren")
+st.write("2. Maak een foto")
+st.write("3. Zie direct het resultaat!")
+st.write("4. Maak een nieuwe foto voor een nieuwe analyse")
+```
+
+**requirements.txt:**
+```
+streamlit
+pillow
