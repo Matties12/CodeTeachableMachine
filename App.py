@@ -1,7 +1,7 @@
 import streamlit as st
 import time
 import random
-from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, WebRtcMode
+from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, WebRtcMode, RTCConfiguration
 import av
 import threading
 
@@ -69,6 +69,15 @@ class VideoProcessor(VideoProcessorBase):
             return self.current_result
 
 
+# RTC Configuration met STUN servers
+RTC_CONFIGURATION = RTCConfiguration(
+    {"iceServers": [
+        {"urls": ["stun:stun.l.google.com:19302"]},
+        {"urls": ["stun:stun1.l.google.com:19302"]},
+        {"urls": ["stun:stun2.l.google.com:19302"]},
+    ]}
+)
+
 st.set_page_config(page_title="Live AAP vs OLIFANT", layout="wide")
 
 st.title("🦍 LIVE AAP vs OLIFANT Herkenning")
@@ -79,8 +88,9 @@ col1, col2 = st.columns([2, 1])
 with col1:
     st.subheader("📹 Live Webcam")
     ctx = webrtc_streamer(
-        key="example",
+        key="animal-detector",
         mode=WebRtcMode.SENDRECV,
+        rtc_configuration=RTC_CONFIGURATION,
         video_processor_factory=VideoProcessor,
         media_stream_constraints={"video": True, "audio": False},
         async_processing=True,
@@ -114,5 +124,6 @@ if ctx.video_processor:
         time.sleep(0.5)
 
 st.markdown("---")
-st.markdown("### 📋 Teachable Machine Toevoegen")
-st.write("Later kunnen we hier echte AI-herkenning toevoegen!")
+st.markdown("### 📋 Tips")
+st.write("- Geef je browser toestemming om de camera te gebruiken")
+st.write("- Als de verbinding niet lukt, probeer de pagina te verversen")
