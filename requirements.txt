@@ -3,3 +3,5 @@ opencv-python-headless
 mysql-connector-python
 numpy
 Pillow
+streamlit-webrtc
+av
