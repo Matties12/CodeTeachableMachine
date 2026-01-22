@@ -35,13 +35,11 @@ WEETJES = {
 
 
 def get_random_weetje(dier):
-    """Haal een willekeurig feitje op voor het gekozen dier"""
     if dier in WEETJES:
         return random.choice(WEETJES[dier])
     return "Geen weetje gevonden 😢"
 
 
-# Video processor die elke 2 seconden analyseert
 class VideoProcessor(VideoProcessorBase):
     def __init__(self):
         self.last_analysis = time.time()
@@ -51,7 +49,6 @@ class VideoProcessor(VideoProcessorBase):
     def recv(self, frame):
         img = frame.to_ndarray(format="bgr24")
         
-        # Check elke 2 seconden
         current_time = time.time()
         if current_time - self.last_analysis >= 2.0:
             with self.lock:
@@ -77,7 +74,6 @@ st.set_page_config(page_title="Live AAP vs OLIFANT", layout="wide")
 st.title("🦍 LIVE AAP vs OLIFANT Herkenning")
 st.write("Live webcam → Automatische analyse elke 2 seconden!")
 
-# Layout met kolommen
 col1, col2 = st.columns([2, 1])
 
 with col1:
@@ -95,7 +91,6 @@ with col2:
     result_placeholder = st.empty()
     info_placeholder = st.empty()
 
-# Update resultaten elke seconde
 if ctx.video_processor:
     while ctx.state.playing:
         result = ctx.video_processor.get_result()
@@ -118,13 +113,12 @@ if ctx.video_processor:
         
         time.sleep(0.5)
 
-# Teachable Machine integratie instructies
 st.markdown("---")
 st.markdown("### 📋 Teachable Machine Toevoegen")
 st.write("Later kunnen we hier echte AI-herkenning toevoegen!")
 ```
 
-**requirements.txt:**
+En maak ook een **requirements.txt** bestand aan met:
 ```
 streamlit
 streamlit-webrtc
