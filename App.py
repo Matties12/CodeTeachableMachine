@@ -85,9 +85,3 @@ st.write("1. Klik op 'Take Photo' om je camera te activeren")
 st.write("2. Maak een foto")
 st.write("3. Zie direct het resultaat!")
 st.write("4. Maak een nieuwe foto voor een nieuwe analyse")
-```
-
-**requirements.txt:**
-```
-streamlit
-pillow
